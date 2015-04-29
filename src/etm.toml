@@ -1,0 +1,9 @@
+#/:  Bus 03.Port 1: Dev 1, Class=root_hub, Driver=ehci-pci/3p, 480M
+#    |__ Port 1: Dev 2, If 0, Class=Hub, Driver=hub/6p, 480M
+#        |__ Port 2: Dev 28, If 0, Class=Hub, Driver=hub/4p, 480M
+#            |__ Port 1: Dev 31, If 0, Class=Vendor Specific Class, Driver=cp210x, 12M <- UART
+#            |__ Port 4: Dev 29, If 0, Class=Vendor Specific Class, Driver=, 12M       <- STLinkv2
+[stm32f3discovery]
+uart        = "3-1.2.1"
+programmer  = "3-1.2.4"
+openocd_cfg = "TODO"

@@ -2,3 +2,9 @@
 name = "etm"
 version = "0.1.0"
 authors = ["Electronic Kiwi <electron.kiwi@gmail.com>"]
+description = "Manages access to microcontroller targets."
+license = "GPL-3.0"
+
+
+[dependencies]
+toml = "0.1.20"
