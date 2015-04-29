@@ -1,0 +1,4 @@
+[package]
+name = "etm"
+version = "0.1.0"
+authors = ["Electronic Kiwi <electron.kiwi@gmail.com>"]
