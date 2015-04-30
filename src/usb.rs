@@ -7,10 +7,16 @@ use std::io::Read;
 
 extern crate glob;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug)]
 pub enum DeviceType {
 	Tty,
-	Debugger,
+	Debugger
+}
+
+#[derive(Debug)]
+pub enum DebuggerType {
+	StLinkv2,
+	AtmelCmsisDap,
 	Unknown
 }
 
@@ -21,7 +27,8 @@ pub struct Device {
 	idVendor: String,
 	address: String,
 	device_type: DeviceType,
-	tty_path: String
+	tty_path: String,
+	debugger_type: DebuggerType
 }
 
 impl Device {
@@ -51,7 +58,8 @@ impl Device {
 			idVendor: String::new(),
 			address: String::new(),
 			device_type: device_type,	// remember what kind of device this is supposed to be
-			tty_path: String::new()
+			tty_path: String::new(),
+			debugger_type: DebuggerType::Unknown
 		};
 
 		match Device::read_file(path, "product",      &mut d.product)
@@ -71,11 +79,17 @@ impl Device {
 			{ Err(why) => return Err(why), Ok(_) => () };
 		d.address.push_str(&devpath);
 
-		if(d.device_type == DeviceType::Tty) {
-			match d.find_tty_path() {
-				Some(path) => d.tty_path = path,
-				None => return Err(format!("Failed to find tty path for {}", d.product))
-			}
+		match d.device_type {
+			DeviceType::Tty =>
+				match d.find_tty_path() {
+					Some(path) => d.tty_path = path,
+					None => return Err(format!("Failed to find tty path for {}", d))
+				},
+			DeviceType::Debugger =>
+				match d.determin_debugger_type() {
+					Some(debugger_type) => d.debugger_type = debugger_type,
+					None => return Err(format!("Unknown debugger {}", d))
+				}
 		}
 
 		Ok(d)
@@ -121,6 +135,14 @@ impl Device {
 
 		None
 	}
+
+	fn determin_debugger_type(&self) -> Option<DebuggerType> {
+		match format!("{}:{}", self.idVendor, self.idProduct).as_str() {
+			"0483:3748" => Some(DebuggerType::StLinkv2),
+			"to:do" => Some(DebuggerType::AtmelCmsisDap),
+			_           => None
+		}
+	}
 }
 
 impl fmt::Display for Device {
@@ -128,10 +150,12 @@ impl fmt::Display for Device {
 		match self.device_type {
 			DeviceType::Tty =>
 				write!(f, "{}:{} {} [{:?}] @ {} -> {}", self.idVendor,
-					self.idProduct, self.product, self.device_type, self.address, self.tty_path),
-			_ =>
-				write!(f, "{}:{} {} [{:?}] @ {}", self.idVendor,
-					self.idProduct, self.product, self.device_type, self.address)
+					self.idProduct, self.product, self.device_type,
+					self.address, self.tty_path),
+			DeviceType::Debugger =>
+				write!(f, "{}:{} {} [{:?}: {:?}] @ {}", self.idVendor,
+					self.idProduct, self.product, self.device_type,
+					self.debugger_type, self.address)
 		}
 	}
 }
