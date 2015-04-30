@@ -1,14 +1,16 @@
 use std::error::Error;
 use std::fs::File;
-use std::path::Path;
+use std::path::{ Path, PathBuf };
 use std::fs::PathExt;
 use std::fmt;
 use std::io::Read;
 
-#[derive(Debug)]
+extern crate glob;
+
+#[derive(Debug, PartialEq)]
 pub enum DeviceType {
 	Tty,
-	StLink2,
+	Debugger,
 	Unknown
 }
 
@@ -18,7 +20,8 @@ pub struct Device {
 	idProduct: String,
 	idVendor: String,
 	address: String,
-	device_type: DeviceType
+	device_type: DeviceType,
+	tty_path: String
 }
 
 impl Device {
@@ -38,7 +41,7 @@ impl Device {
 		Ok(())
 	}
 
-	pub fn from_path(path: &Path) -> Result<Device, String> {
+	pub fn from_path(path: &Path, device_type: DeviceType) -> Result<Device, String> {
 		if(!path.exists()) { return Err(format!("Path: {:?} does not exist", path)) };
 
 		let mut d = Device {
@@ -47,7 +50,8 @@ impl Device {
 			idProduct: String::new(),
 			idVendor: String::new(),
 			address: String::new(),
-			device_type: DeviceType::Unknown
+			device_type: device_type,	// remember what kind of device this is supposed to be
+			tty_path: String::new()
 		};
 
 		match Device::read_file(path, "product",      &mut d.product)
@@ -67,15 +71,33 @@ impl Device {
 			{ Err(why) => return Err(why), Ok(_) => () };
 		d.address.push_str(&devpath);
 
-		d.device_type = d.determine_type();
+		if(d.device_type == DeviceType::Tty) {
+			match d.find_tty_path() {
+				Some(path) => d.tty_path = path,
+				None => return Err(format!("Failed to find tty path for {}", d.product))
+			}
+		}
 
 		Ok(d)
 	}
 
-	pub fn from_address(address: &str) -> Result<Device, String> {
+	pub fn from_address(address: &str, device_type: DeviceType) -> Result<Device, String> {
 		let path_str = &format!("/sys/bus/usb/devices/{}/", address);
 		let path = Path::new(path_str);
-		Device::from_path(&path)
+		Device::from_path(&path, device_type)
+	}
+
+
+	/// tries to convert a sysfs path to the corresponting /dev/tty* path.
+	fn tty_path_from_sysfs_path(path: &PathBuf) -> Option<String> {
+		match path.file_name() {
+			Some(name) =>
+				match name.to_str() {
+					Some(name_str) => Some(format!("/dev/{}", name_str)),
+					None => None
+				},
+			None => None
+		}
 	}
 
 	/// this tries to determine the tty path by looking for tty
@@ -84,23 +106,32 @@ impl Device {
 	/// HL-340:       /sys/bus/usb/devices/2-9/2-9:1.0/ttyUSB0
 	/// CP210x:       /sys/bus/usb/devices/3-1.2/3-1.2:1.0/ttyUSB0
 	/// Atmel XPlain: /sys/bus/usb/devices/3-1.2/3-1.2:1.1/tty/ttyACM0
-	fn find_tty_path(&self) -> Result<String, String> {
+	fn find_tty_path(&self) -> Option<String> {
+		let tty_acm_glob_path_str =
+			&format!("/sys/bus/usb/devices/{}/*/tty/ttyACM*", self.address);
+		let tty_usb_glob_path_str =
+			&format!("/sys/bus/usb/devices/{}/*/ttyUSB*", self.address);
 
-
-	}
-
-	fn determine_type(&self) -> DeviceType {
-		match format!("{}:{}", self.idVendor, self.idProduct).as_str() {
-			"10c4:ea60" => DeviceType::Tty,	// CP210x UART Bridge
-			"1a86:7523" => DeviceType::Tty,	// HL-340 USB-Serial adapter
-			"0483:3748" => DeviceType::StLink2,
-			_           => DeviceType::Unknown
+		for path in glob::glob(tty_acm_glob_path_str).unwrap().filter_map(Result::ok) {
+			return Device::tty_path_from_sysfs_path(&path)
 		}
+		for path in glob::glob(tty_usb_glob_path_str).unwrap().filter_map(Result::ok) {
+			return Device::tty_path_from_sysfs_path(&path)
+		}
+
+		None
 	}
 }
 
 impl fmt::Display for Device {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-		write!(f, "{}:{} {} [{:?}] @ {}", self.idVendor, self.idProduct, self.product, self.device_type, self.address)
+		match self.device_type {
+			DeviceType::Tty =>
+				write!(f, "{}:{} {} [{:?}] @ {} -> {}", self.idVendor,
+					self.idProduct, self.product, self.device_type, self.address, self.tty_path),
+			_ =>
+				write!(f, "{}:{} {} [{:?}] @ {}", self.idVendor,
+					self.idProduct, self.product, self.device_type, self.address)
+		}
 	}
 }

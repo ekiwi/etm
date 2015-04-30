@@ -8,3 +8,4 @@ license = "GPL-3.0"
 
 [dependencies]
 toml = "0.1.20"
+glob = "0.2.10"
