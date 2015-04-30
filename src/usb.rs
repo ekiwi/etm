@@ -62,21 +62,15 @@ impl Device {
 			debugger_type: DebuggerType::Unknown
 		};
 
-		match Device::read_file(path, "product",      &mut d.product)
-			{ Err(why) => return Err(why), Ok(_) => () };
-		match Device::read_file(path, "manufacturer", &mut d.manufacturer)
-			{ Err(why) => return Err(why), Ok(_) => () };
-		match Device::read_file(path, "idProduct",    &mut d.idProduct)
-			{ Err(why) => return Err(why), Ok(_) => () };
-		match Device::read_file(path, "idVendor",     &mut d.idVendor)
-			{ Err(why) => return Err(why), Ok(_) => () };
+		try!(Device::read_file(path, "product",      &mut d.product));
+		try!(Device::read_file(path, "manufacturer", &mut d.manufacturer));
+		try!(Device::read_file(path, "idProduct",    &mut d.idProduct));
+		try!(Device::read_file(path, "idVendor",     &mut d.idVendor));
 		// address = busnum + '-' + devpath
-		match Device::read_file(path, "busnum", &mut d.address)
-			{ Err(why) => return Err(why), Ok(_) => () };
+		try!(Device::read_file(path, "busnum", &mut d.address));
 		d.address.push('-');
 		let mut devpath = String::new();
-		match Device::read_file(path, "devpath", &mut devpath)
-			{ Err(why) => return Err(why), Ok(_) => () };
+		try!(Device::read_file(path, "devpath", &mut devpath));
 		d.address.push_str(&devpath);
 
 		match d.device_type {
