@@ -78,6 +78,17 @@ impl Device {
 		Device::from_path(&path)
 	}
 
+	/// this tries to determine the tty path by looking for tty
+	/// in the directories for the device interfaces
+	/// Examples:
+	/// HL-340:       /sys/bus/usb/devices/2-9/2-9:1.0/ttyUSB0
+	/// CP210x:       /sys/bus/usb/devices/3-1.2/3-1.2:1.0/ttyUSB0
+	/// Atmel XPlain: /sys/bus/usb/devices/3-1.2/3-1.2:1.1/tty/ttyACM0
+	fn find_tty_path(&self) -> Result<String, String> {
+
+
+	}
+
 	fn determine_type(&self) -> DeviceType {
 		match format!("{}:{}", self.idVendor, self.idProduct).as_str() {
 			"10c4:ea60" => DeviceType::Tty,	// CP210x UART Bridge
