@@ -23,8 +23,8 @@ pub enum DebuggerType {
 pub struct Device {
 	product: String,
 	manufacturer : String,
-	idProduct: String,
-	idVendor: String,
+	id_product: String,
+	id_vendor: String,
 	address: String,
 	device_type: DeviceType,
 	tty_path: String,
@@ -49,13 +49,13 @@ impl Device {
 	}
 
 	pub fn from_path(path: &Path, device_type: DeviceType) -> Result<Device, String> {
-		if(!path.exists()) { return Err(format!("Path: {:?} does not exist", path)) };
+		if !path.exists() { return Err(format!("Path: {:?} does not exist", path)) };
 
 		let mut d = Device {
 			product: String::new(),
 			manufacturer: String::new(),
-			idProduct: String::new(),
-			idVendor: String::new(),
+			id_product: String::new(),
+			id_vendor: String::new(),
 			address: String::new(),
 			device_type: device_type,	// remember what kind of device this is supposed to be
 			tty_path: String::new(),
@@ -64,8 +64,8 @@ impl Device {
 
 		try!(Device::read_file(path, "product",      &mut d.product));
 		try!(Device::read_file(path, "manufacturer", &mut d.manufacturer));
-		try!(Device::read_file(path, "idProduct",    &mut d.idProduct));
-		try!(Device::read_file(path, "idVendor",     &mut d.idVendor));
+		try!(Device::read_file(path, "idProduct",    &mut d.id_product));
+		try!(Device::read_file(path, "idVendor",     &mut d.id_vendor));
 		// address = busnum + '-' + devpath
 		try!(Device::read_file(path, "busnum", &mut d.address));
 		d.address.push('-');
@@ -131,7 +131,7 @@ impl Device {
 	}
 
 	fn determin_debugger_type(&self) -> Option<DebuggerType> {
-		match format!("{}:{}", self.idVendor, self.idProduct).as_str() {
+		match format!("{}:{}", self.id_vendor, self.id_product).as_str() {
 			"0483:3748" => Some(DebuggerType::StLinkv2),
 			"to:do" => Some(DebuggerType::AtmelCmsisDap),
 			_           => None
@@ -143,12 +143,12 @@ impl fmt::Display for Device {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 		match self.device_type {
 			DeviceType::Tty =>
-				write!(f, "{}:{} {} [{:?}] @ {} -> {}", self.idVendor,
-					self.idProduct, self.product, self.device_type,
+				write!(f, "{}:{} {} [{:?}] @ {} -> {}", self.id_vendor,
+					self.id_product, self.product, self.device_type,
 					self.address, self.tty_path),
 			DeviceType::Debugger =>
-				write!(f, "{}:{} {} [{:?}: {:?}] @ {}", self.idVendor,
-					self.idProduct, self.product, self.device_type,
+				write!(f, "{}:{} {} [{:?}: {:?}] @ {}", self.id_vendor,
+					self.id_product, self.product, self.device_type,
 					self.debugger_type, self.address)
 		}
 	}
