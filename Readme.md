@@ -3,6 +3,12 @@
 Manages access to microcontroller targets connected to our CI
 server.
 
+## Build Status:
+
+This only works, if you are in the ACS VPN and have the hostname `bob`
+set up correctly.
+[![Build Status](http://bob:8010/png?builder=etm&size=large)](http://bob:8010/builders/etm)
+
 ##Commands
 
 This is not implemented yet, but it shows how `etm` is supposed to work:
