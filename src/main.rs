@@ -3,6 +3,7 @@
 #![feature(convert)]
 
 mod usb;
+mod uart;
 
 fn main() {
 	println!("Welcome to emt version 0.1");

@@ -3,7 +3,7 @@
 Manages access to microcontroller targets connected to our CI
 server.
 
-## Build Status:
+## Build Status
 
 This only works, if you are in the ACS VPN and have the hostname `bob`
 set up correctly.
