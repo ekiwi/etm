@@ -26,9 +26,9 @@ pub struct Uart {
 
 
 impl Uart {
-	pub fn from(tty_path: String, baudrate: String) -> Result<Uart, String> {
+	pub fn from(tty_path: &str, baudrate: &str) -> Result<Uart, String> {
 		Ok(Uart {
-			tty_path: tty_path,
+			tty_path: tty_path.to_string(),
 			state: UartState::Closed,
 			baudrate: try!(Uart::baudrate_from_string(baudrate))
 		})
@@ -40,8 +40,8 @@ impl Uart {
 //	pub fn close(&self) -> Result<(), String> {
 //	}
 
-	fn baudrate_from_string(string: String) -> Result<serial::BaudRate, String> {
-		match string.as_str() {
+	fn baudrate_from_string(string: &str) -> Result<serial::BaudRate, String> {
+		match string {
 			"9600"   => Ok(serial::BaudRate::Baud9600),
 			"115200" => Ok(serial::BaudRate::Baud115200),
 			"230400" => Ok(serial::BaudRate::Baud230400),
@@ -97,6 +97,21 @@ mod test {
 
 	#[test]
 	fn uart_baudrate_from_string() {
-		assert_eq!(Uart::baudrate_from_string(String::from("9600")), Ok(serial::BaudRate::Baud9600));
+		match Uart::baudrate_from_string("9600") {
+			Ok(serial::BaudRate::Baud9600) => assert!(true),
+			_ => assert!(false),
+		};
+		match Uart::baudrate_from_string("115200") {
+			Ok(serial::BaudRate::Baud115200) => assert!(true),
+			_ => assert!(false),
+		};
+		match Uart::baudrate_from_string("230400") {
+			Ok(serial::BaudRate::Baud230400) => assert!(true),
+			_ => assert!(false),
+		};
+		match Uart::baudrate_from_string("230000") {
+			Err(_) => assert!(true),
+			_ => assert!(false),
+		};
 	}
 }
