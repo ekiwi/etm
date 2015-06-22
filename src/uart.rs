@@ -114,4 +114,14 @@ mod test {
 			_ => assert!(false),
 		};
 	}
+
+	#[test]
+	fn uart_constructor() {
+		let u = Uart::from("/dev/tty/USB0", "115200").unwrap();
+		assert_eq!(u.tty_path.as_str(), "/dev/tty/USB0");
+		match u.baudrate {
+			serial::BaudRate::Baud115200 => assert!(true),
+			_ => assert!(false),
+		};
+	}
 }
