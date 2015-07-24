@@ -10,6 +10,9 @@ use std::io;
 use std::io::prelude::*;
 use self::serial::prelude::*;
 
+use std::thread;
+use std::sync::mpsc;
+
 
 pub enum UartState {
 	Closed,
@@ -21,7 +24,8 @@ pub enum UartState {
 pub struct Uart {
 	tty_path: String,
 	state: UartState,
-	baudrate: serial::BaudRate
+	baudrate: serial::BaudRate,
+	
 }
 
 
@@ -49,6 +53,9 @@ impl Uart {
 			                         could not be read. A Valid example \
 			                         would be `115200`", string))
 		}
+	}
+
+	fn start(address: &str) -> Result {
 	}
 }
 

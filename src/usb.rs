@@ -95,6 +95,10 @@ impl Device {
 		Device::from_path(&path, device_type)
 	}
 
+	pub fn get_tty_path(&self) -> &str {
+		self.tty_path.as_str()
+	}
+
 
 	/// tries to convert a sysfs path to the corresponting /dev/tty* path.
 	fn tty_path_from_sysfs_path(path: &PathBuf) -> Option<String> {
